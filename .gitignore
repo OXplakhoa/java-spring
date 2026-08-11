@@ -1,0 +1,45 @@
+# Maven and Java build output
+target/
+**/target/
+*.class
+bin/
+**/bin/
+*.jar
+!**/mvnw
+*.log
+
+# Environment files and local credentials
+.env
+.env.*
+!.env.example
+application-local.properties
+application-local.yml
+application-local.yaml
+
+# Operating-system files
+.DS_Store
+
+# IDE metadata
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated/
+.springBeans
+.sts4-cache/
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# Maven Wrapper distribution cache
+.mvn/wrapper/maven-wrapper.jar
+
+# Generated modernization-tool metadata
+.github/modernize/
