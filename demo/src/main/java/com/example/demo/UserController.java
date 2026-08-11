@@ -2,6 +2,8 @@ package com.example.demo;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,7 +28,7 @@ public class UserController {
     }
 
     @PostMapping
-    public User createUser(@RequestBody CreateUserRequest request) {
+    public User createUser(@Valid @RequestBody CreateUserRequest request) {
         return userService.create(request.getName(), request.getEmail());
     }
 
@@ -41,7 +43,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public User updateUser(@PathVariable Long id, @RequestBody CreateUserRequest request) {
+    public User updateUser(@PathVariable Long id, @Valid @RequestBody CreateUserRequest request) {
         return userService.update(id, request.getName(), request.getEmail());
     }
 
