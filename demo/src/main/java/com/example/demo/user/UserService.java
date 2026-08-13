@@ -1,9 +1,11 @@
 package com.example.demo.user;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.exception.EmailAlreadyExistsException;
 import com.example.demo.exception.UserNotFoundException;
@@ -16,38 +18,70 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public User create(String name, String email) {
-        if (userRepository.existsByEmail(email)) {
-            throw new EmailAlreadyExistsException(email);
+    public UserResponse create(CreateUserRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new EmailAlreadyExistsException(request.getEmail());
         }
 
-        User user = new User(name, email);
-        return saveUser(user);
+        User user = toEntity(request);
+        return toResponse(saveUser(user));
     }
 
-    public List<User> findAll() {
-        return userRepository.findAll();
+    @Transactional
+    public void createTwoUsersThenFail(CreateUserRequest request) {
+        User firstUser = new User(request.getName(), request.getEmail());
+        userRepository.saveAndFlush(firstUser);
+
+        User secondUser = new User(
+                request.getName() + " second",
+                secondEmail(request.getEmail()));
+        userRepository.saveAndFlush(secondUser);
+
+        throw new RuntimeException("Intentional transaction rollback test");
     }
 
-    public User findById(Long id) {
+    public List<UserResponse> findAll() {
+        return userRepository.findAll().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public UserResponse findById(Long id) {
+        return toResponse(findEntityById(id));
+    }
+
+    public UserResponse update(Long id, UpdateUserRequest request) {
+        User user = findEntityById(id);
+
+        if (userRepository.existsByEmailAndIdNot(request.getEmail(), id)) {
+            throw new EmailAlreadyExistsException(request.getEmail());
+        }
+
+        user.updateDetails(request.getName(), request.getEmail());
+        return toResponse(saveUser(user));
+    }
+
+    public void delete(Long id) {
+        User user = findEntityById(id);
+        userRepository.delete(user);
+    }
+
+    private User findEntityById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
     }
 
-    public User update(Long id, String name, String email) {
-        User user = findById(id);
-
-        if (userRepository.existsByEmailAndIdNot(email, id)) {
-            throw new EmailAlreadyExistsException(email);
-        }
-
-        user.updateDetails(name, email);
-        return saveUser(user);
+    private User toEntity(CreateUserRequest request) {
+        return new User(request.getName(), request.getEmail());
     }
 
-    public void delete(Long id) {
-        User user = findById(id);
-        userRepository.delete(user);
+    private UserResponse toResponse(User user) {
+        return new UserResponse(user.getId(), user.getName(), user.getEmail());
+    }
+
+    private String secondEmail(String email) {
+        int atIndex = email.indexOf('@');
+        return "rollback-" + email.substring(0, atIndex) + email.substring(atIndex);
     }
 
     private User saveUser(User user) {

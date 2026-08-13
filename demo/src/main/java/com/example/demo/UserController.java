@@ -15,7 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.ResponseEntity;
 
 import com.example.demo.user.CreateUserRequest;
-import com.example.demo.user.User;
+import com.example.demo.user.UpdateUserRequest;
+import com.example.demo.user.UserResponse;
 import com.example.demo.user.UserService;
 
 @RestController
@@ -28,23 +29,31 @@ public class UserController {
     }
 
     @PostMapping
-    public User createUser(@Valid @RequestBody CreateUserRequest request) {
-        return userService.create(request.getName(), request.getEmail());
+    public UserResponse createUser(@Valid @RequestBody CreateUserRequest request) {
+        return userService.create(request);
+    }
+
+    @PostMapping("/transaction-test")
+    public ResponseEntity<Void> transactionTest(@Valid @RequestBody CreateUserRequest request) {
+        userService.createTwoUsersThenFail(request);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping
-    public List<User> getUsers() {
+    public List<UserResponse> getUsers() {
         return userService.findAll();
     }
 
     @GetMapping("/{id}")
-    public User getUser(@PathVariable Long id) {
+    public UserResponse getUser(@PathVariable Long id) {
         return userService.findById(id);
     }
 
     @PutMapping("/{id}")
-    public User updateUser(@PathVariable Long id, @Valid @RequestBody CreateUserRequest request) {
-        return userService.update(id, request.getName(), request.getEmail());
+    public UserResponse updateUser(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateUserRequest request) {
+        return userService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
